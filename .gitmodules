@@ -1,0 +1,3 @@
+[submodule "lib/TinyOzOled"]
+	path = lib/TinyOzOled
+	url = git@github.com:SensorsIot/TinyOzOled.git
