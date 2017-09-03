@@ -1,3 +1,6 @@
 [submodule "lib/TinyOzOled"]
 	path = lib/TinyOzOled
 	url = git@github.com:SensorsIot/TinyOzOled.git
+[submodule "lib/ssd1306xled"]
+	path = lib/ssd1306xled
+	url = git@github.com:Defragster/ssd1306xled.git
