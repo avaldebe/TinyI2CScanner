@@ -9,24 +9,10 @@ const uint8_t img8x8[2][8] PROGMEM ={        // squares
 };
 
 void setup() {
-#ifdef LED_PIN
-  pinMode(LED_PIN, OUTPUT);         // blink
-#endif
-
   TinyWireM.begin();                // init hardware I2C buss
-
   SSD1306.ssd1306_init();           // init OLED, bitbanged I2C bus
   SSD1306.ssd1306_fillscreen(0x00); // clear screen
-
 }
-
-void blink(uint16_t msec){
-#ifdef LED_PIN
-  digitalWrite(LED_PIN, HIGH);
-  delay(msec);
-  digitalWrite(LED_PIN, LOW);
-#endif
-}  
 
 void loop() {
   uint8_t addr, col, row;
@@ -37,8 +23,6 @@ void loop() {
     col=addr%16*8;
     row=addr/16;
     SSD1306.ssd1306_draw_bmp(col, row, col+8, row+1, img8x8[found?1:0]);
-    if(found) blink(100);
   }
-  delay(2000);
 }
 
