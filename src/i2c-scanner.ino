@@ -34,22 +34,82 @@ void setup() {
   SSD1306.ssd1306_string_font6x8((char*)"7bit addresses");
 }
 
+void blink(uint16_t msec){
+  digitalWrite(LED_PIN, HIGH);
+  delay(msec);
+  digitalWrite(LED_PIN, LOW);
+}  
+
 void loop() {
   delay(2000);
 
-  // background image
-  SSD1306.ssd1306_draw_bmp(0, 0, 128, 8, frame);
-
-  digitalWrite(LED_PIN, HIGH); // start scan
-
+  bool found[128] = {};
   uint8_t addr, error;
-  for(addr=8; addr<120; addr++){
-    TinyWireM.beginTransmission(addr);
-    error = TinyWireM.endTransmission(1);
-    if(error == 0x00) {
-      SSD1306.ssd1306_char_f8x16(0,0,"OK");
+  for(addr=0; addr<128; addr++){
+    switch(addr){
+    case 8 ... 119:
+      TinyWireM.beginTransmission(addr);
+      error = TinyWireM.endTransmission(1);
+      found[addr] = (error == 0x00);
+      if(found[addr]) blink(5000);
+      break;
+    default:
+      // mark invalid addresses found, only for debugging
+      found[addr] = true;
     }
   }
-
-  digitalWrite(LED_PIN, LOW); // end scan
+  
+  SSD1306.ssd1306_setpos(0, 0);
+  uint8_t da=0, nx=17, fill=0, fillcn=4;
+  SSD1306.ssd1306_send_data_start();
+  for(uint16_t y=0; y<8; y++){
+    nx = 17;
+    for(uint16_t x=0; x<128; x++){
+      da = pgm_read_byte(&frame[x+(y*128)]);
+      if((x == nx) && (y > 0)){
+        addr = (((nx-17) / 7)<<3)+y;
+        nx = nx+7;
+        fillcn = 4;
+        switch(y){
+        case 1 :
+          if(found[addr-1]) fill = 0b00011110;
+          break;
+        case 2 :
+          if(found[addr-1]) fill = 0b00001111;
+          if(found[addr])   fill = 0b10000000;
+          break;
+        case 3 :
+          if(found[addr-1]) fill = 0b00000111;
+          if(found[addr])   fill = 0b11000000;
+          break;
+        case 4 :
+          if(found[addr-1]) fill = 0b00000011;
+          if(found[addr])   fill = 0b11100000;
+          break;
+        case 5 :
+          if(found[addr-1]) fill = 0b00000001;
+          if(found[addr])   fill = 0b11110000;
+          break;
+        case 6 :
+          if(found[addr])   fill = 0b01111000;
+          break;
+        case 7 :
+          if(found[addr])   fill = 0b00111100;
+          break;
+        default:
+          fillcn = 0;
+        }
+      }
+      if(fillcn){
+        da |= fill;
+        fillcn--;
+      }else{
+        fill = 0;
+      }
+      SSD1306.ssd1306_send_byte(da);
+    }
+  }
+  SSD1306.ssd1306_send_data_stop();
 }
+
+
