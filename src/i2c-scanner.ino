@@ -14,15 +14,21 @@ void setup() {
   SSD1306.ssd1306_fillscreen(0x00); // clear screen
 }
 
+bool i2c_found(uint8_t addr){
+  TinyWireM.beginTransmission(addr);
+  uint8_t error = TinyWireM.endTransmission(1);
+  return (error==0x00);  
+}
+
 void loop() {
   uint8_t addr, col, row;
   bool found;
   for(addr=8; addr<120; addr++){    // valid address space
-    TinyWireM.beginTransmission(addr);
-    found = (TinyWireM.endTransmission(1)==0x00);
-    col=addr%16*8;
-    row=addr/16;
+    col = addr%16*8;
+    row = addr/16;
+    found = i2c_found(addr);
     SSD1306.ssd1306_draw_bmp(col, row, col+8, row+1, img8x8[found?1:0]);
   }
+  delay(2000);
 }
 
