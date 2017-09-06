@@ -76,19 +76,19 @@ void loop() {
           break;
         case 2 :
           if(found[addr-1]) fill = 0b00001111;
-          if(found[addr])   fill = 0b10000000;
+          if(found[addr])   fill|= 0b10000000;
           break;
         case 3 :
           if(found[addr-1]) fill = 0b00000111;
-          if(found[addr])   fill = 0b11000000;
+          if(found[addr])   fill|= 0b11000000;
           break;
         case 4 :
           if(found[addr-1]) fill = 0b00000011;
-          if(found[addr])   fill = 0b11100000;
+          if(found[addr])   fill|= 0b11100000;
           break;
         case 5 :
           if(found[addr-1]) fill = 0b00000001;
-          if(found[addr])   fill = 0b11110000;
+          if(found[addr])   fill|= 0b11110000;
           break;
         case 6 :
           if(found[addr])   fill = 0b01111000;
