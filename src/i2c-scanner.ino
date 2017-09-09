@@ -2,8 +2,6 @@
 #include <TinyWireM.h>    // Scan haedware I2C bus
 #define TACT_PIN LED_PIN  // same pin for TACT and LED
 
-
-// Background image from tiny44 project
 const uint8_t img8x8[2][8] PROGMEM ={        // squares
   {0x00,0x7E,0x42,0x42,0x42,0x42,0x7E,0x00}, // empty
   {0x00,0x7E,0x7E,0x7E,0x7E,0x7E,0x7E,0x00}  // full
@@ -28,24 +26,23 @@ bool i2c_found(uint8_t addr, uint8_t ntry=1, uint16_t msec=0){
   return found;
 }
 
+void draw_address(uint8_t addr, bool colunmFirst=true){
+  uint8_t col, row;
+  if(colunmFirst){  // 7bit mode: show all addresses
+    col = (addr&0x0F)<<3; // equiv (addr%16)*8
+    row = addr>>4;        // equiv  addr/16
+  }else{            // 8bit mode: show only even addresses
+    col = addr&0xF8;      // equiv (addr/8)*8
+    row = addr&0x07;      // equiv  addr%8
+  }
+  bool found = i2c_found(addr, 2, 5); // try 2 times for DHT12/AM2320/AM2321
+  SSD1306.ssd1306_draw_bmp(col, row, col+8, row+1, img8x8[found?1:0]);
+}
+
 void loop() {
-  static bool colunmFirst = false;
-  uint8_t addr, col, row;
-  bool found;
-  if(colunmFirst){
-     for(addr=8; addr<120; addr++){    // valid address space
-      col = (addr&0x0F)<<3; // equiv (addr%16)*8
-      row = addr>>4;        // equiv  addr/16
-      found = i2c_found(addr, 1, 5);
-      SSD1306.ssd1306_draw_bmp(col, row, col+8, row+1, img8x8[found?1:0]);
-    }
-  }else{
-     for(addr=8; addr<120; addr++){    // valid address space
-      col = addr&0xF8;  // equiv (addr/8)*8
-      row = addr&0x07;  // equiv  addr%8
-      found = i2c_found(addr, 1, 5);
-      SSD1306.ssd1306_draw_bmp(col, row, col+8, row+1, img8x8[found?1:0]);
-    }
+  static bool colunmFirst = true;
+  for(uint8_t addr=8; addr<120; addr++){ // valid address space
+    draw_address(addr, colunmFirst);
   }
   if(digitalRead(TACT_PIN) == HIGH){
     colunmFirst = !colunmFirst;
