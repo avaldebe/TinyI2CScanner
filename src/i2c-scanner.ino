@@ -14,11 +14,18 @@ void setup() {
   SSD1306.ssd1306_fillscreen(0x00); // clear screen
 }
 
-bool i2c_found(uint8_t addr){
-  TinyWireM.beginTransmission(addr);
-  uint8_t error = TinyWireM.endTransmission(1);
-  return (error==0x00);  
+bool i2c_found(uint8_t addr, uint8_t ntry=1, uint16_t msec=0){
+  const uint8_t noError = 0x00;
+  uint8_t n = 0;
+  bool found = false;
+  while(ntry>n++ && not found){
+    TinyWireM.beginTransmission(addr);
+    found = (TinyWireM.endTransmission(1) == noError);
+    if(msec>0) delay(msec);
+  }
+  return found;
 }
+
 
 void loop() {
   uint8_t addr, col, row;
@@ -26,7 +33,7 @@ void loop() {
   for(addr=8; addr<120; addr++){    // valid address space
     col = addr%16*8;
     row = addr/16;
-    found = i2c_found(addr);
+    found = i2c_found(addr, 2, 5);
     SSD1306.ssd1306_draw_bmp(col, row, col+8, row+1, img8x8[found?1:0]);
   }
   delay(2000);
