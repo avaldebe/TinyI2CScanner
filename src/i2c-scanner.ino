@@ -1,8 +1,13 @@
-#include <ssd1306xled.h>  // OLED library, bitbanged I2C
+#include <Arduino.h>
+
+#include <U8x8lib.h>  // Arduino Monochrome Graphics Library
+U8X8_SSD1306_128X64_NONAME_SW_I2C
+  u8x8(SSD1306_SCL, SSD1306_SDA, U8X8_PIN_NONE); // software I2C
+
 #include <TinyWireM.h>    // Scan haedware I2C bus
 #define TACT_PIN LED_PIN  // same pin for TACT and LED
 
-const uint8_t img8x8[2][8] PROGMEM ={        // squares
+const uint8_t img8x8[2][8] = {       // squares
   {0x00,0x7E,0x42,0x42,0x42,0x42,0x7E,0x00}, // empty
   {0x00,0x7E,0x7E,0x7E,0x7E,0x7E,0x7E,0x00}  // full
 };
@@ -10,8 +15,8 @@ const uint8_t img8x8[2][8] PROGMEM ={        // squares
 void setup() {
   pinMode(TACT_PIN, INPUT);         // init TACT switch
   TinyWireM.begin();                // init hardware I2C buss
-  SSD1306.ssd1306_init();           // init OLED, bitbanged I2C bus
-  SSD1306.ssd1306_fillscreen(0x00); // clear screen
+  u8x8.begin();                     // init OLED, bitbanged I2C bus
+  u8x8.clear();                     // clear screen
 }
 
 bool i2c_found(uint8_t addr, uint8_t ntry=1, uint16_t msec=0){
@@ -28,15 +33,15 @@ bool i2c_found(uint8_t addr, uint8_t ntry=1, uint16_t msec=0){
 
 void draw_address(uint8_t addr, bool colunmFirst=true){
   uint8_t col, row;
-  if(colunmFirst){  // 7bit mode: show all addresses
-    col = (addr&0x0F)<<3; // equiv (addr%16)*8
-    row = addr>>4;        // equiv  addr/16
-  }else{            // 8bit mode: show only even addresses
-    col = addr&0xF8;      // equiv (addr/8)*8
-    row = addr&0x07;      // equiv  addr%8
+  if (colunmFirst) {  // 7bit mode: show all addresses
+    col = addr%16;
+    row = addr/16;
+  } else {            // 8bit mode: show only even addresses
+    col = addr/8;
+    row = addr%8;
   }
   bool found = i2c_found(addr, 2, 5); // try 2 times for DHT12/AM2320/AM2321
-  SSD1306.ssd1306_draw_bmp(col, row, col+8, row+1, img8x8[found?1:0]);
+  u8x8.drawTile(col, row, 1, img8x8[found?1:0]);
 }
 
 void loop() {
@@ -46,9 +51,8 @@ void loop() {
   }
   if(digitalRead(TACT_PIN) == HIGH){
     colunmFirst = !colunmFirst;
-    SSD1306.ssd1306_fillscreen(0x00); // clear screen
+    u8x8.clear();                     // clear screen
   }else{
     delay(2000);
   }
 }
-
