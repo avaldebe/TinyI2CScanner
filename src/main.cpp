@@ -7,16 +7,12 @@ U8X8_SSD1306_128X64_NONAME_SW_I2C
 #include <TinyWireM.h>    // Scan haedware I2C bus
 #define TACT_PIN LED_PIN  // same pin for TACT and LED
 
-const uint8_t img8x8[2][8] = {       // squares
-  {0x00,0x7E,0x42,0x42,0x42,0x42,0x7E,0x00}, // empty
-  {0x00,0x7E,0x7E,0x7E,0x7E,0x7E,0x7E,0x00}  // full
-};
-
 void setup() {
   pinMode(TACT_PIN, INPUT);         // init TACT switch
   TinyWireM.begin();                // init hardware I2C buss
   u8x8.begin();                     // init OLED, bitbanged I2C bus
   u8x8.clear();                     // clear screen
+  u8x8.setFont(u8x8_font_5x8_n);
 }
 
 bool i2c_found(uint8_t addr, uint8_t ntry=1, uint16_t msec=0){
@@ -41,7 +37,7 @@ void draw_address(uint8_t addr, bool colunmFirst=true){
     row = addr%8;
   }
   bool found = i2c_found(addr, 2, 5); // try 2 times for DHT12/AM2320/AM2321
-  u8x8.drawTile(col, row, 1, img8x8[found?1:0]);
+  u8x8.drawGlyph(col, row, found?'*':'+');
 }
 
 void loop() {
