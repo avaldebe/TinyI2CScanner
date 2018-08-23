@@ -28,16 +28,13 @@ bool i2c_found(uint8_t addr, uint8_t ntry=1, uint16_t msec=0){
 }
 
 void draw_address(uint8_t addr, bool colunmFirst=true){
-  uint8_t col, row;
   if (colunmFirst) {  // 7bit mode: show all addresses
-    col = addr%16;
-    row = addr/16;
+    oled.setCursor(addr%16, addr/16); // col, row
   } else {            // 8bit mode: show only even addresses
-    col = addr/8;
-    row = addr%8;
+    oled.setCursor(addr/8, addr%8); // col, row
   }
   bool found = i2c_found(addr, 2, 5); // try 2 times for DHT12/AM2320/AM2321
-  oled.drawGlyph(col, row, found?'*':'+');
+  oled.print(found?'*':'+');
 }
 
 void loop() {
