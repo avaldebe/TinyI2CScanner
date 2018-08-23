@@ -22,8 +22,8 @@ bool i2c_found(uint8_t addr, uint8_t ntry=1, uint16_t msec=0){
   do { // test at least once
     TinyWireM.beginTransmission(addr);
     found = (TinyWireM.endTransmission(1) == noError);
-    if(msec>0) delay(msec);
-  } while(ntry>n++ && not found);
+    if (msec>0) { delay(msec); }
+  } while (ntry>n++ && not found);
   return found;
 }
 
@@ -31,7 +31,7 @@ void draw_address(uint8_t addr, bool colunmFirst=true){
   if (colunmFirst) {  // 7bit mode: show all addresses
     oled.setCursor(addr%16, addr/16); // col, row
   } else {            // 8bit mode: show only even addresses
-    oled.setCursor(addr/8, addr%8); // col, row
+    oled.setCursor(addr/8, addr%8);   // col, row
   }
   bool found = i2c_found(addr, 2, 5); // try 2 times for DHT12/AM2320/AM2321
   oled.print(found?'*':'+');
@@ -39,13 +39,13 @@ void draw_address(uint8_t addr, bool colunmFirst=true){
 
 void loop() {
   static bool colunmFirst = true;
-  for(uint8_t addr=8; addr<120; addr++){ // valid address space
+  for (uint8_t addr=8; addr<120; addr++) { // valid address space
     draw_address(addr, colunmFirst);
   }
-  if(digitalRead(TACT_PIN) == HIGH){
+  if (digitalRead(TACT_PIN) == HIGH) {
     colunmFirst = !colunmFirst;
     oled.clear();                     // clear screen
-  }else{
+  } else {
     delay(2000);
   }
 }
