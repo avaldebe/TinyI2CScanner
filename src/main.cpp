@@ -2,7 +2,7 @@
 
 #include <U8x8lib.h>  // Arduino Monochrome Graphics Library
 U8X8_SSD1306_128X64_NONAME_SW_I2C
-  u8x8(SSD1306_SCL, SSD1306_SDA, U8X8_PIN_NONE); // software I2C
+  oled(SSD1306_SCL, SSD1306_SDA, U8X8_PIN_NONE); // software I2C
 
 #include <TinyWireM.h>    // Scan haedware I2C bus
 #define TACT_PIN LED_PIN  // same pin for TACT and LED
@@ -10,9 +10,9 @@ U8X8_SSD1306_128X64_NONAME_SW_I2C
 void setup() {
   pinMode(TACT_PIN, INPUT);         // init TACT switch
   TinyWireM.begin();                // init hardware I2C buss
-  u8x8.begin();                     // init OLED, bitbanged I2C bus
-  u8x8.clear();                     // clear screen
-  u8x8.setFont(u8x8_font_5x8_n);
+  oled.begin();                     // init OLED, bitbanged I2C bus
+  oled.clear();                     // clear screen
+  oled.setFont(u8x8_font_5x8_n);
 }
 
 bool i2c_found(uint8_t addr, uint8_t ntry=1, uint16_t msec=0){
@@ -37,7 +37,7 @@ void draw_address(uint8_t addr, bool colunmFirst=true){
     row = addr%8;
   }
   bool found = i2c_found(addr, 2, 5); // try 2 times for DHT12/AM2320/AM2321
-  u8x8.drawGlyph(col, row, found?'*':'+');
+  oled.drawGlyph(col, row, found?'*':'+');
 }
 
 void loop() {
@@ -47,7 +47,7 @@ void loop() {
   }
   if(digitalRead(TACT_PIN) == HIGH){
     colunmFirst = !colunmFirst;
-    u8x8.clear();                     // clear screen
+    oled.clear();                     // clear screen
   }else{
     delay(2000);
   }
