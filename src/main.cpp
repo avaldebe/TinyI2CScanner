@@ -6,8 +6,8 @@ U8G2_SSD1306_128X64_NONAME_1_SW_I2C
 
 #define FONT_TEXT     u8g2_font_5x7_mr
 #define FONT_ICON     u8g2_font_m2icon_7_tf
-#define ROW_HEIGHT    7
-#define COL_WIDTH     5
+#define COL(col)      7*(col)
+#define ROW(row)      7*(row+1)
 
 #include <TinyWireM.h>    // Scan haedware I2C bus
 #define TACT_PIN LED_PIN  // same pin for TACT and LED
@@ -20,15 +20,15 @@ void setup() {
 
   // header/index
   oled.setFont(FONT_TEXT);
-  const char header[] = "0123456789ABCD";
+  const char header[] = "0123456789ABCDEF";
   uint8_t n;
   // print header (1st row)
   for (n = 0; n<16; n++){
-    oled.drawGlyph(COL_WIDTH*(n+1), ROW_HEIGHT, header[n]);
+    oled.drawGlyph(COL(n+1), ROW(0), header[n]);
   }
   // print index (1st column)
   for (n = 0; n<8; n++){
-    oled.drawGlyph(COL_WIDTH, ROW_HEIGHT*(n+2), header[n]);
+    oled.drawGlyph(COL(0), ROW(n+1), header[n]);
   }
   
   // fot for icon flyphs
@@ -48,7 +48,7 @@ bool i2c_found(uint8_t addr, uint8_t ntry=1, uint16_t msec=0){
 }
 
 void loop() {
-  uint8_t addr, col, row;
+  uint8_t addr;
   bool found[127];
   for (addr=8; addr<120; addr++) {  // valid address space
     found[addr] = i2c_found(addr, 2, 5);     // try 2 times for DHT12/AM2320/AM2321
@@ -56,9 +56,7 @@ void loop() {
   oled.firstPage();
   do {
     for (addr=8; addr<120; addr++) {  // valid address space
-      col = 1 + addr%16;
-      row = 2 + addr/16;
-      oled.drawGlyph(COL_WIDTH*col, ROW_HEIGHT*row, found[addr]?'*':'+');
+      oled.drawGlyph(COL(addr%16+1), ROW(addr/16+1), found[addr]?'*':'+');
     }
   } while ( oled.nextPage() );
   delay(2000);
