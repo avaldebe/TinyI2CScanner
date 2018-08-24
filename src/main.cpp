@@ -5,6 +5,7 @@ U8G2_SSD1306_128X64_NONAME_1_SW_I2C
   oled(U8G2_R0, SSD1306_SCL, SSD1306_SDA, U8X8_PIN_NONE); // software I2C
 
 #define FONT          u8g2_font_5x7_mr
+#define ICON          u8g2_font_m2icon_7_tf
 #define FONT_HEIGHT   7
 #define FONT_WIDTH    5
 
@@ -27,6 +28,7 @@ void setup() {
     oled.setCursor(0, (n+1)*FONT_HEIGHT);
     oled.print(n, HEX);    
   }
+  oled.setFont(ICON);
 }
 
 bool i2c_found(uint8_t addr, uint8_t ntry=1, uint16_t msec=0){
@@ -52,8 +54,7 @@ void loop() {
     for (addr=8; addr<120; addr++) {  // valid address space
       col = 1 + addr%16;
       row = 1 + addr/16;
-      oled.setCursor(col*FONT_HEIGHT, row*FONT_WIDTH);
-      oled.print(found[addr]?'*':'+');
+      oled.drawGlyph(col*FONT_HEIGHT, row*FONT_WIDTH, found[addr]?'*':'+');
     }
   } while ( oled.nextPage() );
   delay(2000);
