@@ -1,8 +1,8 @@
 #include <Arduino.h>
 
-#include <U8x8lib.h>  // Arduino Monochrome Graphics Library
-U8X8_SSD1306_128X64_NONAME_SW_I2C
-  oled(SSD1306_SCL, SSD1306_SDA, U8X8_PIN_NONE); // software I2C
+#include <U8g2lib.h>  // Arduino Monochrome Graphics Library
+U8G2_SSD1306_128X64_NONAME_1_SW_I2C
+  oled(U8G2_R0, SSD1306_SCL, SSD1306_SDA, U8X8_PIN_NONE); // software I2C
 
 #include <TinyWireM.h>    // Scan haedware I2C bus
 #define TACT_PIN LED_PIN  // same pin for TACT and LED
@@ -39,9 +39,12 @@ void draw_address(uint8_t addr, bool colunmFirst=true){
 
 void loop() {
   static bool colunmFirst = true;
-  for (uint8_t addr=8; addr<120; addr++) { // valid address space
-    draw_address(addr, colunmFirst);
-  }
+  oled.firstPage();
+  do {
+    for (uint8_t addr=8; addr<120; addr++) {  // valid address space
+      draw_address(addr, colunmFirst);
+    }
+  } while ( oled.nextPage() );
   if (digitalRead(TACT_PIN) == HIGH) {
     colunmFirst = !colunmFirst;
     oled.clear();                     // clear screen
