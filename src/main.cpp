@@ -4,6 +4,10 @@
 U8G2_SSD1306_128X64_NONAME_1_SW_I2C
   oled(U8G2_R0, SSD1306_SCL, SSD1306_SDA, U8X8_PIN_NONE); // software I2C
 
+#define FONT          u8g2_font_5x7_mr
+#define FONT_HEIGHT   7
+#define FONT_WIDTH    5
+
 #include <TinyWireM.h>    // Scan haedware I2C bus
 #define TACT_PIN LED_PIN  // same pin for TACT and LED
 
@@ -12,7 +16,7 @@ void setup() {
   TinyWireM.begin();                // init hardware I2C buss
   oled.begin();                     // init OLED, bitbanged I2C bus
   oled.clear();                     // clear screen
-  oled.setFont(u8x8_font_5x8_n);
+  oled.setFont(FONT);
 }
 
 bool i2c_found(uint8_t addr, uint8_t ntry=1, uint16_t msec=0){
@@ -28,10 +32,13 @@ bool i2c_found(uint8_t addr, uint8_t ntry=1, uint16_t msec=0){
 }
 
 void loop() {
+  uint8_t addr, col, row;
   oled.firstPage();
   do {
-    for (uint8_t addr=8; addr<120; addr++) {  // valid address space
-      oled.setCursor(addr%16, addr/16);       // col, row
+    for (addr=8; addr<120; addr++) {  // valid address space
+      col = addr%16;
+      row = addr/16;
+      oled.setCursor(col*FONT_HEIGHT, row*FONT_WIDTH);
       bool found = i2c_found(addr, 2, 5);     // try 2 times for DHT12/AM2320/AM2321
       oled.print(found?'*':'+');
     }
