@@ -35,10 +35,10 @@ void loop() {
   const char header[] = "0123456789ABCDEF";
   static bool colunmFirst = true;
   uint8_t addr, n;
-  bool found[128];  // firtst and last 8 addresses are reserved
+  bool found[128] = { false };      // full address spase
 
-  for (addr=8; addr<120; addr++) {  // valid address space
-    found[addr] = i2c_found(addr, 2, 5);     // try 2 times for DHT12/AM2320/AM2321
+  for (addr=8; addr<120; addr++) {  // firtst and last 8 addresses are reserved
+    found[addr] = i2c_found(addr, 2, 5);  // try 2 times for DHT12/AM2320/AM2321
   }
 
   oled.firstPage();
@@ -54,7 +54,7 @@ void loop() {
       oled.drawGlyph(COL(0), ROW(n+1), colunmFirst?header[n]:header[n*2]);
     }
     oled.setFont(FONT_ICON);
-    for (addr=8; addr<120; addr++) {  // valid address space
+    for (addr=0; addr<128; addr++) {  // full address spase
       oled.drawGlyph(
         colunmFirst?COL(addr%16+1):COL(addr/8+1),
         colunmFirst?ROW(addr/16+1):ROW(addr%8+1),
