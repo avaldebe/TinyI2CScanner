@@ -49,7 +49,7 @@ bool i2c_found(uint8_t addr, uint8_t ntry=1, uint16_t msec=0){
 
 void loop() {
   uint8_t addr;
-  bool found[127];
+  bool found[128];  // firtst and last 8 addresses are reserved
   for (addr=8; addr<120; addr++) {  // valid address space
     found[addr] = i2c_found(addr, 2, 5);     // try 2 times for DHT12/AM2320/AM2321
   }
