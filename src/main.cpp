@@ -27,28 +27,14 @@ bool i2c_found(uint8_t addr, uint8_t ntry=1, uint16_t msec=0){
   return found;
 }
 
-void draw_address(uint8_t addr, bool colunmFirst=true){
-  if (colunmFirst) {  // 7bit mode: show all addresses
-    oled.setCursor(addr%16, addr/16); // col, row
-  } else {            // 8bit mode: show only even addresses
-    oled.setCursor(addr/8, addr%8);   // col, row
-  }
-  bool found = i2c_found(addr, 2, 5); // try 2 times for DHT12/AM2320/AM2321
-  oled.print(found?'*':'+');
-}
-
 void loop() {
-  static bool colunmFirst = true;
   oled.firstPage();
   do {
     for (uint8_t addr=8; addr<120; addr++) {  // valid address space
-      draw_address(addr, colunmFirst);
+      oled.setCursor(addr%16, addr/16);       // col, row
+      bool found = i2c_found(addr, 2, 5);     // try 2 times for DHT12/AM2320/AM2321
+      oled.print(found?'*':'+');
     }
   } while ( oled.nextPage() );
-  if (digitalRead(TACT_PIN) == HIGH) {
-    colunmFirst = !colunmFirst;
-    oled.clear();                     // clear screen
-  } else {
-    delay(2000);
-  }
+  delay(2000);
 }
