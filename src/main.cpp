@@ -4,10 +4,10 @@
 U8G2_SSD1306_128X64_NONAME_1_SW_I2C
   oled(U8G2_R0, SSD1306_SCL, SSD1306_SDA, U8X8_PIN_NONE); // software I2C
 
-#define FONT          u8g2_font_5x7_mr
-#define ICON          u8g2_font_m2icon_7_tf
-#define FONT_HEIGHT   7
-#define FONT_WIDTH    5
+#define FONT_TEXT     u8g2_font_5x7_mr
+#define FONT_ICON     u8g2_font_m2icon_7_tf
+#define ROW_HEIGHT    7
+#define COL_WIDTH     5
 
 #include <TinyWireM.h>    // Scan haedware I2C bus
 #define TACT_PIN LED_PIN  // same pin for TACT and LED
@@ -17,18 +17,22 @@ void setup() {
   TinyWireM.begin();                // init hardware I2C buss
   oled.begin();                     // init OLED, bitbanged I2C bus
   oled.clear();                     // clear screen
-  oled.setFont(FONT);
+
+  // header/index
+  oled.setFont(FONT_TEXT);
+  const char header[] = "0123456789ABCD";
+  uint8_t n;
   // print header (1st row)
-  oled.setCursor(FONT_WIDTH, FONT_HEIGHT);
-  for (uint8_t n = 0; n<16; n++){
-    oled.print(n, HEX);    
+  for (n = 0; n<16; n++){
+    oled.drawGlyph(COL_WIDTH*(n+1), ROW_HEIGHT, header[n]);
   }
   // print index (1st column)
-  for (uint8_t n = 0; n<8; n++){
-    oled.setCursor(0, (n+1)*FONT_HEIGHT);
-    oled.print(n, HEX);    
+  for (n = 0; n<8; n++){
+    oled.drawGlyph(COL_WIDTH, ROW_HEIGHT*(n+2), header[n]);
   }
-  oled.setFont(ICON);
+  
+  // fot for icon flyphs
+  oled.setFont(FONT_ICON);
 }
 
 bool i2c_found(uint8_t addr, uint8_t ntry=1, uint16_t msec=0){
@@ -53,8 +57,8 @@ void loop() {
   do {
     for (addr=8; addr<120; addr++) {  // valid address space
       col = 1 + addr%16;
-      row = 1 + addr/16;
-      oled.drawGlyph(col*FONT_HEIGHT, row*FONT_WIDTH, found[addr]?'*':'+');
+      row = 2 + addr/16;
+      oled.drawGlyph(COL_WIDTH*col, ROW_HEIGHT*row, found[addr]?'*':'+');
     }
   } while ( oled.nextPage() );
   delay(2000);
