@@ -7,6 +7,7 @@ U8X8_SSD1306_128X64_NONAME_SW_I2C
 void setup() {
   u8x8.begin();                     // init OLED, bitbanged I2C bus
   u8x8.clear();                     // clear screen
+  u8x8.setFont(u8x8_font_chroma48medium8_r);
   u8x8.println("OK");
 }
 
