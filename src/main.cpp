@@ -13,7 +13,7 @@ U8G2_SSD1306_128X64_NONAME_1_SW_I2C
 #define TACT_PIN LED_PIN  // same pin for TACT and LED
 
 void setup() {
-  pinMode(TACT_PIN, INPUT);         // init TACT switch
+  pinMode(TACT_PIN, INPUT_PULLUP);  // init TACT switch
   TinyWireM.begin();                // init hardware I2C buss
   oled.begin();                     // init OLED, bitbanged I2C bus
   oled.clear();                     // clear screen
@@ -62,7 +62,7 @@ void loop() {
       );
     }
   } while ( oled.nextPage() );
-  if (digitalRead(TACT_PIN) == HIGH) {
+  if (digitalRead(TACT_PIN) == LOW) {
     colunmFirst = !colunmFirst;
     oled.clear();                     // clear screen
   } else {
