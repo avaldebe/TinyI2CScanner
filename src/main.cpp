@@ -49,7 +49,7 @@ void loop() {
   for(uint8_t addr=8; addr<120; addr++){ // valid address space
     draw_address(addr, colunmFirst);
   }
-  if(digitalRead(TACT_PIN) == HIGH){
+  if(digitalRead(TACT_PIN) == LOW){
     colunmFirst = !colunmFirst;
     u8x8.clear();                     // clear screen
   }else{
