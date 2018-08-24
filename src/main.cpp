@@ -33,14 +33,17 @@ bool i2c_found(uint8_t addr, uint8_t ntry=1, uint16_t msec=0){
 
 void loop() {
   uint8_t addr, col, row;
+  bool found[127];
+  for (addr=8; addr<120; addr++) {  // valid address space
+    found[addr] = i2c_found(addr, 2, 5);     // try 2 times for DHT12/AM2320/AM2321
+  }
   oled.firstPage();
   do {
     for (addr=8; addr<120; addr++) {  // valid address space
-      col = addr%16;
-      row = addr/16;
+      col = 1 + addr%16;
+      row = 1 + addr/16;
       oled.setCursor(col*FONT_HEIGHT, row*FONT_WIDTH);
-      bool found = i2c_found(addr, 2, 5);     // try 2 times for DHT12/AM2320/AM2321
-      oled.print(found?'*':'+');
+      oled.print(found[addr]?'*':'+');
     }
   } while ( oled.nextPage() );
   delay(2000);
