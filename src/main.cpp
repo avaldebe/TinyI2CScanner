@@ -17,6 +17,16 @@ void setup() {
   oled.begin();                     // init OLED, bitbanged I2C bus
   oled.clear();                     // clear screen
   oled.setFont(FONT);
+  // print header (1st row)
+  oled.setCursor(FONT_WIDTH, FONT_HEIGHT);
+  for (uint8_t n = 0; n<16; n++){
+    oled.print(n, HEX);    
+  }
+  // print index (1st column)
+  for (uint8_t n = 0; n<8; n++){
+    oled.setCursor(0, (n+1)*FONT_HEIGHT);
+    oled.print(n, HEX);    
+  }
 }
 
 bool i2c_found(uint8_t addr, uint8_t ntry=1, uint16_t msec=0){
