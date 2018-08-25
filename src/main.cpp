@@ -1,15 +1,20 @@
 #include <Arduino.h>
-#include <TinyWireM.h>    // Scan haedware I2C bus
+#include <Wire.h>         // Scan haedware I2C bus
 #include <U8x8lib.h>      // Arduino Monochrome Graphics Library
-U8X8_SSD1306_128X64_NONAME_SW_I2C
-  oled(SSD1306_SCL, SSD1306_SDA, U8X8_PIN_NONE); // software I2C
+#if defined(SSD1306_SCL) && defined(SSD1306_SDA)
+U8X8_SSD1306_128X64_NONAME_SW_I2C // software I2C
+  oled(SSD1306_SCL, SSD1306_SDA, U8X8_PIN_NONE);
+#else
+U8X8_SSD1306_128X64_NONAME_HW_I2C // hardware I2C
+  oled(U8X8_PIN_NONE);
+#endif
 
-#define TACT_PIN   LED_PIN  // same pin for TACT and LED
+#define TACT_PIN   LED_BUILTIN  // same pin for TACT and LED
 #define FONT_TEXT  u8x8_font_chroma48medium8_r
 
 void setup() {
   pinMode(TACT_PIN, INPUT);         // init TACT switch
-  TinyWireM.begin();                // init hardware I2C buss
+  Wire.begin();                // init hardware I2C buss
   oled.begin();                     // init OLED, bitbanged I2C bus
   oled.clear();                     // clear screen
   oled.setFont(FONT_TEXT);
@@ -20,8 +25,8 @@ bool i2c_found(uint8_t addr, uint8_t ntry=1, uint16_t msec=0){
   const uint8_t noError = 0x00;
   uint8_t n = 0;
   do { // test at least once
-    TinyWireM.beginTransmission(addr);
-    if (TinyWireM.endTransmission(1) == noError) { return true; }
+    Wire.beginTransmission(addr);
+    if (Wire.endTransmission(1) == noError) { return true; }
     if(msec>0) delay(msec);
   } while (ntry>n++);
   return false;
