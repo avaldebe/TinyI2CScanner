@@ -16,8 +16,14 @@ void setup() {
 
 #define COL(c,a)        (c)?(a%16):(a/8)
 #define ROW(c,a)        (c)?(a/16):(a%8)
-#define GLYPH(f,c,x,y)  f?'+':(x==0||y==0)?c?header[x+y]:header[x+2*y]:'.'
-const uint8_t header[] = "0123456789ABCDEF";
+#define GLYPH(f,c,x,y)  header[f?16:(x==0||y==0)?c?x+y:x+2*y:17]
+const uint8_t header[18] = {
+  '0','1','2','3','4','5','6','7',
+  '8','9','A','B','C','D','E','F',
+  '+', // 16:found
+  '.'  // 17:not found
+};
+
 void loop() {
   static bool colunmFirst = true;
   uint8_t addr, x, y;
