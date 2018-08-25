@@ -10,7 +10,7 @@ U8G2_SSD1306_128X64_NONAME_1_HW_I2C // hardware I2C
 #endif
 
 #define TACT_PIN   LED_BUILTIN  // same pin for TACT and LED
-#define FONT_TEXT  u8g2_font_amstrad_cpc_extended_8u
+#define FONT_TEXT  u8g2_font_5x7_mr
 
 void setup() {
   pinMode(TACT_PIN, INPUT);         // init TACT switch
@@ -34,9 +34,10 @@ bool i2c_found(uint8_t addr, uint8_t ntry=1, uint16_t msec=0){
 
 #define COL(c,a)        (c)?(a%16):(a/8)
 #define ROW(c,a)        (c)?(a/16):(a%8)
-#define GLYPH(f,c,x,y)  header[f?16:(x==0||y==0)?c?x+y:x+2*y:17]
-#define XPOS(x)         (x+0)*8
-#define YPOS(x)         (y+1)*8
+#define HEAD(c,x,y)     header[c?x+y:x+2*y]
+#define GLYPH(f)        header[f?16:17]
+#define XPOS(n)         (n+0)*7
+#define YPOS(n)         (n+1)*7
 const uint8_t header[18] = {
   '0','1','2','3','4','5','6','7',
   '8','9','A','B','C','D','E','F',
@@ -50,11 +51,17 @@ void loop() {
   bool found;
   oled.firstPage();
   do {
+    for (x=0, y=0; x<16; x++) {       // row0: header
+      oled.drawGlyph(XPOS(x+1), YPOS(y), HEAD(colunmFirst,x,y));
+    }
+    for (x=0, y=0; y<8; y++) {        // col0: index
+      oled.drawGlyph(XPOS(x), YPOS(y+1), HEAD(colunmFirst,x,y));
+    }
     for (addr=0; addr<128; addr++) {  // full address spase
        x = COL(colunmFirst, addr);
        y = ROW(colunmFirst, addr);
        found = (addr==AM2321)?i2c_found(addr, 2, 5):i2c_found(addr); // try 2 times for DHT12/AM2320/AM2321
-       oled.drawGlyph(XPOS(x), YPOS(y), GLYPH(found,colunmFirst,x,y));
+       oled.drawGlyph(XPOS(x+1), YPOS(y+1), GLYPH(found));
     }
   } while ( oled.nextPage() );
   if (digitalRead(TACT_PIN) == HIGH) {
