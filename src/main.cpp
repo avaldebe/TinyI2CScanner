@@ -17,7 +17,7 @@ void setup() {
 #define COL(c,a)        (c)?(a%16):(a/8)
 #define ROW(c,a)        (c)?(a/16):(a%8)
 #define GLYPH(f,c,x,y)  f?'+':(x==0||y==0)?c?header[x+y]:header[x+2*y]:'.'
-const char header[] = "0123456789ABCDEF";
+const uint8_t header[] = "0123456789ABCDEF";
 void loop() {
   static bool colunmFirst = true;
   uint8_t addr, x, y;
@@ -34,6 +34,6 @@ void loop() {
   }
   if (digitalRead(TACT_PIN) == HIGH) {
     colunmFirst = !colunmFirst;
-    oled.clear();                     // clear screen
+    oled.clear();
   }
 }
