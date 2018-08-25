@@ -10,14 +10,11 @@ U8G2_SSD1306_128X64_NONAME_1_HW_I2C // hardware I2C
 #endif
 
 #define TACT_PIN   LED_BUILTIN  // same pin for TACT and LED
-#define FONT_TEXT  u8g2_font_5x7_mr
-
 void setup() {
   pinMode(TACT_PIN, INPUT);         // init TACT switch
   Wire.begin();                // init hardware I2C buss
   oled.begin();                     // init OLED, bitbanged I2C bus
   oled.clear();                     // clear screen
-  oled.setFont(FONT_TEXT);
 }
 
 bool i2c_found(uint8_t addr, uint8_t ntry=1, uint16_t msec=0){
@@ -32,17 +29,17 @@ bool i2c_found(uint8_t addr, uint8_t ntry=1, uint16_t msec=0){
   return false;
 }
 
+#define FONT_TEXT       u8g2_font_5x7_mr
+#define FONT_ICON       u8g2_font_m2icon_7_tf
 #define COL(c,a)        (c)?(a%16):(a/8)
 #define ROW(c,a)        (c)?(a/16):(a%8)
-#define HEAD(c,x,y)     header[c?x+y:x+2*y]
-#define GLYPH(f)        header[f?16:17]
+#define HEAD(c,x,y)     header[c?x+y:x+2*y] // use FONT_TEXT
+#define GLYPH(f)        f?0x46:0x45         // use FONT_ICON
 #define XPOS(n)         (n+0)*7
 #define YPOS(n)         (n+1)*7
-const uint8_t header[18] = {
+const uint8_t header[16] = {
   '0','1','2','3','4','5','6','7',
-  '8','9','A','B','C','D','E','F',
-  '+', // 16:found
-  '.'  // 17:not found
+  '8','9','A','B','C','D','E','F'
 };
 void loop() {
   static bool colunmFirst = true;
@@ -51,12 +48,14 @@ void loop() {
   bool found;
   oled.firstPage();
   do {
+    oled.setFont(FONT_TEXT);
     for (x=0, y=0; x<16; x++) {       // row0: header
       oled.drawGlyph(XPOS(x+1), YPOS(y), HEAD(colunmFirst,x,y));
     }
     for (x=0, y=0; y<8; y++) {        // col0: index
       oled.drawGlyph(XPOS(x), YPOS(y+1), HEAD(colunmFirst,x,y));
     }
+    oled.setFont(FONT_ICON);
     for (addr=0; addr<128; addr++) {  // full address spase
        x = COL(colunmFirst, addr);
        y = ROW(colunmFirst, addr);
