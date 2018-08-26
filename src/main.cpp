@@ -1,22 +1,38 @@
 #include <Arduino.h>
+
+// Scan haedware I2C bus
 #ifdef __AVR_ATtiny85__
-  #include <TinyWireM.h>  // Scan haedware I2C bus
+  #include <TinyWireM.h>
   #define _Wire TinyWireM
 #else
-  #include <Wire.h>       // Scan haedware I2C bus
+  #include <Wire.h>
   #define _Wire Wire
 #endif
-#include <U8g2lib.h>      // Arduino Monochrome Graphics Library
-#if defined(SSD1306_SCL) && defined(SSD1306_SDA)
-U8G2_SSD1306_128X64_NONAME_1_SW_I2C // software I2C
-  oled(U8G2_R0, SSD1306_SCL, SSD1306_SDA, U8X8_PIN_NONE);
+
+// Arduino Monochrome Graphics Library
+#ifdef USE_U8X8
+  #include <U8x8lib.h>
+  #define FONT_TEXT  u8x8_font_chroma48medium8_u
+  #if defined(SSD1306_SCL) && defined(SSD1306_SDA)
+    U8X8_SSD1306_128X64_NONAME_SW_I2C   // software I2C
+      oled(SSD1306_SCL, SSD1306_SDA, U8X8_PIN_NONE);
+  #else
+    U8X8_SSD1306_128X64_NONAME_HW_I2C   // hardware I2C
+      oled(U8X8_PIN_NONE);
+  #endif
 #else
-U8G2_SSD1306_128X64_NONAME_1_HW_I2C // hardware I2C
-  oled(U8G2_R0, U8X8_PIN_NONE);
+  #include <U8g2lib.h>
+  #define FONT_TEXT  u8g2_font_5x7_mr
+  #define FONT_ICON  u8g2_font_m2icon_7_tf
+  #if defined(SSD1306_SCL) && defined(SSD1306_SDA)
+    U8G2_SSD1306_128X64_NONAME_1_SW_I2C // software I2C
+      oled(U8G2_R0, SSD1306_SCL, SSD1306_SDA, U8X8_PIN_NONE);
+  #else
+    U8G2_SSD1306_128X64_NONAME_1_HW_I2C // hardware I2C
+      oled(U8G2_R0, U8X8_PIN_NONE);
+  #endif
 #endif
 
-#define FONT_TEXT       u8g2_font_5x7_mr
-#define FONT_ICON       u8g2_font_m2icon_7_tf
 void setup() {
 #ifdef TACT_PIN
   pinMode(TACT_PIN, INPUT);         // init TACT switch
@@ -24,12 +40,17 @@ void setup() {
   _Wire.begin();                     // init hardware I2C buss
   oled.begin();                     // init OLED, bitbanged I2C bus
   oled.clear();                     // clear screen
+#ifdef USE_U8X8
+  oled.setFont(FONT_TEXT);
+  oled.println(F("TINY I2C SCANNER"));
+#else
   oled.firstPage();
   do {
     oled.setFont(FONT_TEXT);
     oled.setCursor(0,7);
     oled.println(F("Tiny I2C Scanner"));
   } while ( oled.nextPage() );
+#endif
   delay(1000);
 }
 
@@ -52,6 +73,7 @@ bool scann(uint8_t addr){
 
 #define HEX1(n)         ((n>9)?(n-10+'A'):(n+'0'))  // 0 .. 15 --> '0' .. 'F'
 #define TEXT(c,x,y)     c?HEX1(x+y):HEX1(x+2*y)     // use FONT_TEXT
+#define GLYPH(f,c,x,y)  f?'+':(x==0||y==0)?TEXT(c,x,y):'.'
 #define ICON(f)         f?0x46:0x45                 // use FONT_ICON
 #define COL(c,a)        (c)?(a%16):(a/8)            // low nibble  7b addr || high nibble 8b addr/2
 #define ROW(c,a)        (c)?(a/16):(a%8)            // high nibble 7b addr || low nibble  8b addr/2
@@ -69,6 +91,14 @@ void loop() {
 #endif
   uint8_t addr, x, y;
   bool found;
+#ifdef USE_U8X8
+  for (addr=0; addr<128; addr++) {  // full address spase
+    x = COL(colunmFirst, addr);
+    y = ROW(colunmFirst, addr);
+    found = scann(addr);
+    oled.drawGlyph(x, y, GLYPH(found,colunmFirst,x,y));
+  }
+#else
   oled.firstPage();
   do {
     oled.setFont(FONT_TEXT);
@@ -86,4 +116,5 @@ void loop() {
       oled.drawGlyph(XPOS(x+1), YPOS(y+1), ICON(found));
     }
   } while ( oled.nextPage() );
+#endif
 }
