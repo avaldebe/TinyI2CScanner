@@ -18,16 +18,21 @@ void setup() {
   oled.clear();                     // clear screen
 }
 
-bool i2c_found(uint8_t addr, uint8_t ntry=1, uint16_t msec=0){
-  if (addr<8||addr>119) { return false; }  // firs/last 8 addr are reserved
+bool scann(uint8_t addr){
+  const uint8_t AM2321 = 0x5c;
   const uint8_t noError = 0x00;
-  uint8_t n = 0;
-  do { // test at least once
-    Wire.beginTransmission(addr);
-    if (Wire.endTransmission(1) == noError) { return true; }
-    if(msec>0) delay(msec);
-  } while (ntry>n++);
-  return false;
+  switch (addr) {
+    case 0x00 ... 0x07: // first 8 addresses are reserved
+    case 0x78 ... 0xFF: // last  8 addresses are reserved
+      return false;
+    case AM2321:        // try 2 times for DHT12/AM2320/AM2321
+      Wire.beginTransmission(addr);
+      if (Wire.endTransmission(1)==noError) { return true; }
+      delay(5);
+    default:
+      Wire.beginTransmission(addr);
+      return (Wire.endTransmission(1)==noError);
+  }
 }
 
 #define FONT_TEXT       u8g2_font_5x7_mr
@@ -49,7 +54,6 @@ void loop() {
 #else
   const bool colunmFirst = true;
 #endif
-  const uint8_t AM2321 = 0x5c;
   uint8_t addr, x, y;
   bool found;
   oled.firstPage();
@@ -65,7 +69,7 @@ void loop() {
     for (addr=0; addr<128; addr++) {  // full address spase
       x = COL(colunmFirst, addr);
       y = ROW(colunmFirst, addr);
-      found = (addr==AM2321)?i2c_found(addr, 2, 5):i2c_found(addr); // try 2 times for DHT12/AM2320/AM2321
+      found = scann(addr);
       oled.drawGlyph(XPOS(x+1), YPOS(y+1), ICON(found));
     }
   } while ( oled.nextPage() );
