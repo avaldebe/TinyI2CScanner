@@ -5,7 +5,7 @@ U8X8_SSD1306_128X64_NONAME_SW_I2C
   oled(SSD1306_SCL, SSD1306_SDA, U8X8_PIN_NONE); // software I2C
 
 #define TACT_PIN   LED_PIN  // same pin for TACT and LED
-#define FONT_TEXT  u8x8_font_chroma48medium8_r
+#define FONT_TEXT  u8x8_font_chroma48medium8_u
 
 void setup() {
   pinMode(TACT_PIN, INPUT);         // init TACT switch
@@ -13,6 +13,7 @@ void setup() {
   oled.begin();                     // init OLED, bitbanged I2C bus
   oled.clear();                     // clear screen
   oled.setFont(FONT_TEXT);
+  oled.println(F("TINY I2C SCANNER"));
 }
 
 bool i2c_found(uint8_t addr, uint8_t ntry=1, uint16_t msec=0){
