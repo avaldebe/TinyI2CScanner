@@ -27,15 +27,12 @@ bool i2c_found(uint8_t addr, uint8_t ntry=1, uint16_t msec=0){
   return false;
 }
 
+#define HEX1(n)         ((n>9)?(n-10+'A'):(n+'0'))  // 0 .. 15 --> '0' .. 'F'
+#define TEXT(c,x,y)     c?HEX1(x+y):HEX1(x+2*y)     // use FONT_TEXT
+#define ICON(f)         f?'+':'.'                   // use FONT_TEXT
+#define GLYPH(f,c,x,y)  f?'+':(x==0||y==0)?TEXT(c,x,y):'.'
 #define COL(c,a)        (c)?(a%16):(a/8)
 #define ROW(c,a)        (c)?(a/16):(a%8)
-#define GLYPH(f,c,x,y)  header[f?16:(x==0||y==0)?c?x+y:x+2*y:17]
-const uint8_t header[18] = {
-  '0','1','2','3','4','5','6','7',
-  '8','9','A','B','C','D','E','F',
-  '+', // 16:found
-  '.'  // 17:not found
-};
 void loop() {
   static bool colunmFirst = true;
   const uint8_t AM2321 = 0x5c;
