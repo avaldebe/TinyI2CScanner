@@ -9,10 +9,11 @@ U8G2_SSD1306_128X64_NONAME_1_HW_I2C // hardware I2C
   oled(U8G2_R0, U8X8_PIN_NONE);
 #endif
 
-#define TACT_PIN   LED_BUILTIN  // same pin for TACT and LED
 void setup() {
+#ifdef TACT_PIN
   pinMode(TACT_PIN, INPUT);         // init TACT switch
-  Wire.begin();                // init hardware I2C buss
+#endif
+  Wire.begin();                     // init hardware I2C buss
   oled.begin();                     // init OLED, bitbanged I2C bus
   oled.clear();                     // clear screen
 }
@@ -39,7 +40,15 @@ bool i2c_found(uint8_t addr, uint8_t ntry=1, uint16_t msec=0){
 #define XPOS(n)         (n+0)*7                     // text/icon col --> x coord
 #define YPOS(n)         (n+1)*7                     // text/icon row --> y coord
 void loop() {
+#ifdef TACT_PIN
   static bool colunmFirst = true;
+  if (digitalRead(TACT_PIN) == HIGH) {
+    colunmFirst = !colunmFirst;
+    oled.clear();
+  }
+#else
+  const bool colunmFirst = true;
+#endif
   const uint8_t AM2321 = 0x5c;
   uint8_t addr, x, y;
   bool found;
@@ -60,8 +69,4 @@ void loop() {
       oled.drawGlyph(XPOS(x+1), YPOS(y+1), ICON(found));
     }
   } while ( oled.nextPage() );
-  if (digitalRead(TACT_PIN) == HIGH) {
-    colunmFirst = !colunmFirst;
-    oled.clear();
-  }
 }
