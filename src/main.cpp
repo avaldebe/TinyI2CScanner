@@ -54,10 +54,10 @@ void loop() {
     }
     oled.setFont(FONT_ICON);
     for (addr=0; addr<128; addr++) {  // full address spase
-       x = COL(colunmFirst, addr);
-       y = ROW(colunmFirst, addr);
-       found = (addr==AM2321)?i2c_found(addr, 2, 5):i2c_found(addr); // try 2 times for DHT12/AM2320/AM2321
-       oled.drawGlyph(XPOS(x+1), YPOS(y+1), ICON(found));
+      x = COL(colunmFirst, addr);
+      y = ROW(colunmFirst, addr);
+      found = (addr==AM2321)?i2c_found(addr, 2, 5):i2c_found(addr); // try 2 times for DHT12/AM2320/AM2321
+      oled.drawGlyph(XPOS(x+1), YPOS(y+1), ICON(found));
     }
   } while ( oled.nextPage() );
   if (digitalRead(TACT_PIN) == HIGH) {
