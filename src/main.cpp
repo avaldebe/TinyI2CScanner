@@ -15,6 +15,8 @@ U8G2_SSD1306_128X64_NONAME_1_HW_I2C // hardware I2C
   oled(U8G2_R0, U8X8_PIN_NONE);
 #endif
 
+#define FONT_TEXT       u8g2_font_5x7_mr
+#define FONT_ICON       u8g2_font_m2icon_7_tf
 void setup() {
 #ifdef TACT_PIN
   pinMode(TACT_PIN, INPUT);         // init TACT switch
@@ -22,6 +24,13 @@ void setup() {
   _Wire.begin();                     // init hardware I2C buss
   oled.begin();                     // init OLED, bitbanged I2C bus
   oled.clear();                     // clear screen
+  oled.firstPage();
+  do {
+    oled.setFont(FONT_TEXT);
+    oled.setCursor(0,7);
+    oled.println(F("Tiny I2C Scanner"));
+  } while ( oled.nextPage() );
+  delay(1000);
 }
 
 bool scann(uint8_t addr){
@@ -41,8 +50,6 @@ bool scann(uint8_t addr){
   }
 }
 
-#define FONT_TEXT       u8g2_font_5x7_mr
-#define FONT_ICON       u8g2_font_m2icon_7_tf
 #define HEX1(n)         ((n>9)?(n-10+'A'):(n+'0'))  // 0 .. 15 --> '0' .. 'F'
 #define TEXT(c,x,y)     c?HEX1(x+y):HEX1(x+2*y)     // use FONT_TEXT
 #define ICON(f)         f?0x46:0x45                 // use FONT_ICON
