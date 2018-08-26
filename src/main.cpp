@@ -1,5 +1,11 @@
 #include <Arduino.h>
-#include <Wire.h>         // Scan haedware I2C bus
+#ifdef __AVR_ATtiny85__
+  #include <TinyWireM.h>  // Scan haedware I2C bus
+  #define _Wire TinyWireM
+#else
+  #include <Wire.h>       // Scan haedware I2C bus
+  #define _Wire Wire
+#endif
 #include <U8g2lib.h>      // Arduino Monochrome Graphics Library
 #if defined(SSD1306_SCL) && defined(SSD1306_SDA)
 U8G2_SSD1306_128X64_NONAME_1_SW_I2C // software I2C
@@ -13,7 +19,7 @@ void setup() {
 #ifdef TACT_PIN
   pinMode(TACT_PIN, INPUT);         // init TACT switch
 #endif
-  Wire.begin();                     // init hardware I2C buss
+  _Wire.begin();                     // init hardware I2C buss
   oled.begin();                     // init OLED, bitbanged I2C bus
   oled.clear();                     // clear screen
 }
@@ -26,12 +32,12 @@ bool scann(uint8_t addr){
     case 0x78 ... 0xFF: // last  8 addresses are reserved
       return false;
     case AM2321:        // try 2 times for DHT12/AM2320/AM2321
-      Wire.beginTransmission(addr);
-      if (Wire.endTransmission(1)==noError) { return true; }
+      _Wire.beginTransmission(addr);
+      if (_Wire.endTransmission(1)==noError) { return true; }
       delay(5);
     default:
-      Wire.beginTransmission(addr);
-      return (Wire.endTransmission(1)==noError);
+      _Wire.beginTransmission(addr);
+      return (_Wire.endTransmission(1)==noError);
   }
 }
 
