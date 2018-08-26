@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include <ssd1306xled.h>  // OLED library, bitbanged I2C
 #include <TinyWireM.h>    // Scan haedware I2C bus
 #define TACT_PIN LED_PIN  // same pin for TACT and LED
