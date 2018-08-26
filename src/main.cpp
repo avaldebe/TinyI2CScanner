@@ -4,11 +4,11 @@
 U8X8_SSD1306_128X64_NONAME_SW_I2C
   oled(SSD1306_SCL, SSD1306_SDA, U8X8_PIN_NONE); // software I2C
 
-#define TACT_PIN   LED_PIN  // same pin for TACT and LED
 #define FONT_TEXT  u8x8_font_chroma48medium8_u
-
 void setup() {
+#ifdef TACT_PIN
   pinMode(TACT_PIN, INPUT);         // init TACT switch
+#endif
   TinyWireM.begin();                // init hardware I2C buss
   oled.begin();                     // init OLED, bitbanged I2C bus
   oled.clear();                     // clear screen
@@ -40,7 +40,15 @@ bool scann(uint8_t addr){
 #define COL(c,a)        (c)?(a%16):(a/8)
 #define ROW(c,a)        (c)?(a/16):(a%8)
 void loop() {
+#ifdef TACT_PIN
   static bool colunmFirst = true;
+  if (digitalRead(TACT_PIN) == HIGH) {
+    colunmFirst = !colunmFirst;
+    oled.clear();
+  }
+#else
+  const bool colunmFirst = true;
+#endif
   uint8_t addr, x, y;
   bool found;
   for (addr=0; addr<128; addr++) {  // full address spase
@@ -48,9 +56,5 @@ void loop() {
     y = ROW(colunmFirst, addr);
     found = scann(addr);
     oled.drawGlyph(x, y, GLYPH(found,colunmFirst,x,y));
-  }
-  if (digitalRead(TACT_PIN) == HIGH) {
-    colunmFirst = !colunmFirst;
-    oled.clear();
   }
 }
