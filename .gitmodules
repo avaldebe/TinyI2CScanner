@@ -1,3 +1,0 @@
-[submodule "lib/ssd1306xled"]
-	path = lib/ssd1306xled
-	url = git@github.com:Defragster/ssd1306xled.git
