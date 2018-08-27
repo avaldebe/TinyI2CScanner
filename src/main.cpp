@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 // OLED library, bitbanged I2C
 #include <ssd1306xled.h>
 
