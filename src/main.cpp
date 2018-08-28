@@ -1,58 +1,117 @@
 #include <Arduino.h>
 
-#include <U8x8lib.h>  // Arduino Monochrome Graphics Library
-U8X8_SSD1306_128X64_NONAME_SW_I2C
-  u8x8(SSD1306_SCL, SSD1306_SDA, U8X8_PIN_NONE); // software I2C
+// Scan haedware I2C bus
+#ifdef __AVR_ATtiny85__
+  #include <TinyWireM.h>
+  #define _Wire TinyWireM
+#else
+  #include <Wire.h>
+  #define _Wire Wire
+#endif
 
-#include <TinyWireM.h>    // Scan haedware I2C bus
-#define TACT_PIN LED_PIN  // same pin for TACT and LED
-
-const uint8_t img8x8[2][8] = {       // squares
-  {0x00,0x7E,0x42,0x42,0x42,0x42,0x7E,0x00}, // empty
-  {0x00,0x7E,0x7E,0x7E,0x7E,0x7E,0x7E,0x00}  // full
-};
+// Arduino Monochrome Graphics Library
+#ifdef USE_U8X8
+  #include <U8x8lib.h>
+  #define FONT_TEXT  u8x8_font_chroma48medium8_u
+  #define PAGE_BEGIN
+  #define PAGE_END
+  #if defined(SSD1306_SCL) && defined(SSD1306_SDA)
+    U8X8_SSD1306_128X64_NONAME_SW_I2C   // software I2C
+      oled(SSD1306_SCL, SSD1306_SDA, U8X8_PIN_NONE);
+  #else
+    U8X8_SSD1306_128X64_NONAME_HW_I2C   // hardware I2C
+      oled(U8X8_PIN_NONE);
+  #endif
+#else
+  #include <U8g2lib.h>
+  #define FONT_TEXT  u8g2_font_5x7_mr
+  #define PAGE_BEGIN oled.firstPage(); do {
+  #define PAGE_END   } while ( oled.nextPage() );
+  #if defined(SSD1306_SCL) && defined(SSD1306_SDA)
+    U8G2_SSD1306_128X64_NONAME_1_SW_I2C // software I2C
+      oled(U8G2_R0, SSD1306_SCL, SSD1306_SDA, U8X8_PIN_NONE);
+  #else
+    U8G2_SSD1306_128X64_NONAME_1_HW_I2C // hardware I2C
+      oled(U8G2_R0, U8X8_PIN_NONE);
+  #endif
+#endif
 
 void setup() {
+#ifdef TACT_PIN
   pinMode(TACT_PIN, INPUT);         // init TACT switch
-  TinyWireM.begin();                // init hardware I2C buss
-  u8x8.begin();                     // init OLED, bitbanged I2C bus
-  u8x8.clear();                     // clear screen
+#endif
+  _Wire.begin();                    // init hardware I2C buss
+  oled.begin();                     // init OLED, bitbanged I2C bus
+  oled.clear();                     // clear screen
+  oled.setFont(FONT_TEXT);
+#ifdef USE_U8X8
+  oled.setCursor(0,1);
+  oled.print(F("TINY I2C SCANNER"));
+  delay(1000);
+#endif
 }
 
-bool i2c_found(uint8_t addr, uint8_t ntry=1, uint16_t msec=0){
+bool scann(uint8_t addr){
+  const uint8_t AM2321 = 0x5c;
   const uint8_t noError = 0x00;
-  uint8_t n = 0;
-  bool found;
-  do { // test at least once
-    TinyWireM.beginTransmission(addr);
-    found = (TinyWireM.endTransmission(1) == noError);
-    if(msec>0) delay(msec);
-  } while(ntry>n++ && not found);
-  return found;
-}
-
-void draw_address(uint8_t addr, bool colunmFirst=true){
-  uint8_t col, row;
-  if (colunmFirst) {  // 7bit mode: show all addresses
-    col = addr%16;
-    row = addr/16;
-  } else {            // 8bit mode: show only even addresses
-    col = addr/8;
-    row = addr%8;
+  switch (addr) {
+    case 0x00 ... 0x07: // first 8 addresses are reserved
+    case 0x78 ... 0xFF: // last  8 addresses are reserved
+      return false;
+    case AM2321:        // try 2 times for DHT12/AM2320/AM2321
+      _Wire.beginTransmission(addr);
+      if (_Wire.endTransmission(1)==noError) { return true; }
+      delay(5);
+    default:
+      _Wire.beginTransmission(addr);
+      return (_Wire.endTransmission(1)==noError);
   }
-  bool found = i2c_found(addr, 2, 5); // try 2 times for DHT12/AM2320/AM2321
-  u8x8.drawTile(col, row, 1, img8x8[found?1:0]);
 }
 
+#define HEX1(n)         ((n>9)?(n-10+'A'):(n+'0'))  // 0 .. 15 --> '0' .. 'F'
+#define TEXT(c,x,y)     c?HEX1(x+y):HEX1(x+2*y)     // use FONT_TEXT
+#define GLYPH(f,c,x,y)  f?'+':(x==0||y==0)?TEXT(c,x,y):'.'
+#define COL(c,a)        (c)?(a%16):(a/8)   // low nibble  7b addr || high nibble 8b addr/2
+#define ROW(c,a)        (c)?(a/16):(a%8)   // high nibble 7b addr || low nibble  8b addr/2
+#define XPOS(n)         (n+0)*7            // text/icon col --> x coord
+#define YPOS(n)         (n+1)*7            // text/icon row --> y coord
 void loop() {
+#ifdef TACT_PIN
   static bool colunmFirst = true;
-  for(uint8_t addr=8; addr<120; addr++){ // valid address space
-    draw_address(addr, colunmFirst);
-  }
-  if(digitalRead(TACT_PIN) == LOW){
+  if (digitalRead(TACT_PIN) == HIGH) {
     colunmFirst = !colunmFirst;
-    u8x8.clear();                     // clear screen
-  }else{
-    delay(2000);
+    oled.clear();
   }
+#else
+  const bool colunmFirst = true;
+#endif
+  uint8_t addr, x, y;
+  bool found;
+  PAGE_BEGIN
+#ifndef USE_U8X8
+    oled.setFontDirection(1);
+    oled.drawStr(XPOS(17), YPOS(0), "I2C SCANNER");
+    oled.setFontDirection(0);
+    for (x=0, y=0; x<16; x++) {       // row0: header
+      oled.drawGlyph(XPOS(x+1), YPOS(y), TEXT(colunmFirst,x,y));
+    }
+    for (x=0, y=0; y<8; y++) {        // col0: index
+      oled.drawGlyph(XPOS(x), YPOS(y+1), TEXT(colunmFirst,x,y));
+    }
+#endif
+    for (addr=0; addr<128; addr++) {  // full address spase
+      x = COL(colunmFirst, addr);
+      y = ROW(colunmFirst, addr);
+      found = scann(addr);
+#ifdef USE_U8X8
+      oled.drawGlyph(x, y, GLYPH(found,colunmFirst,x,y));
+#else
+      if (found) {
+        oled.drawBox  (XPOS(x+1), YPOS(y)+1, 6, 6);
+      } else {
+        oled.drawFrame(XPOS(x+1), YPOS(y)+1, 6, 6);
+      }
+#endif
+    }
+  PAGE_END
 }
