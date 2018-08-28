@@ -15,8 +15,6 @@
   #define FONT_TEXT  u8x8_font_chroma48medium8_u
   #define PAGE_BEGIN
   #define PAGE_END
-  #define XPOS(n)    n                  // text/icon col --> x coord
-  #define YPOS(n)    n                  // text/icon row --> y coord
   #if defined(SSD1306_SCL) && defined(SSD1306_SDA)
     U8X8_SSD1306_128X64_NONAME_SW_I2C   // software I2C
       oled(SSD1306_SCL, SSD1306_SDA, U8X8_PIN_NONE);
@@ -29,8 +27,6 @@
   #define FONT_TEXT  u8g2_font_5x7_mr
   #define PAGE_BEGIN oled.firstPage(); do {
   #define PAGE_END   } while ( oled.nextPage() );
-  #define XPOS(n)    (n+0)*7            // text/icon col --> x coord
-  #define YPOS(n)    (n+1)*7            // text/icon row --> y coord
   #if defined(SSD1306_SCL) && defined(SSD1306_SDA)
     U8G2_SSD1306_128X64_NONAME_1_SW_I2C // software I2C
       oled(U8G2_R0, SSD1306_SCL, SSD1306_SDA, U8X8_PIN_NONE);
@@ -48,11 +44,11 @@ void setup() {
   oled.begin();                     // init OLED, bitbanged I2C bus
   oled.clear();                     // clear screen
   oled.setFont(FONT_TEXT);
-  PAGE_BEGIN
-    oled.setCursor(XPOS(0),YPOS(2));
-    oled.print(F("TINY I2C SCANNER"));
-  PAGE_END
+#ifdef USE_U8X8
+  oled.setCursor(0,1);
+  oled.print(F("TINY I2C SCANNER"));
   delay(1000);
+#endif
 }
 
 bool scann(uint8_t addr){
@@ -75,8 +71,10 @@ bool scann(uint8_t addr){
 #define HEX1(n)         ((n>9)?(n-10+'A'):(n+'0'))  // 0 .. 15 --> '0' .. 'F'
 #define TEXT(c,x,y)     c?HEX1(x+y):HEX1(x+2*y)     // use FONT_TEXT
 #define GLYPH(f,c,x,y)  f?'+':(x==0||y==0)?TEXT(c,x,y):'.'
-#define COL(c,a)        (c)?(a%16):(a/8)            // low nibble  7b addr || high nibble 8b addr/2
-#define ROW(c,a)        (c)?(a/16):(a%8)            // high nibble 7b addr || low nibble  8b addr/2
+#define COL(c,a)        (c)?(a%16):(a/8)   // low nibble  7b addr || high nibble 8b addr/2
+#define ROW(c,a)        (c)?(a/16):(a%8)   // high nibble 7b addr || low nibble  8b addr/2
+#define XPOS(n)         (n+0)*7            // text/icon col --> x coord
+#define YPOS(n)         (n+1)*7            // text/icon row --> y coord
 void loop() {
 #ifdef TACT_PIN
   static bool colunmFirst = true;
@@ -91,6 +89,9 @@ void loop() {
   bool found;
   PAGE_BEGIN
 #ifndef USE_U8X8
+    oled.setFontDirection(1);
+    oled.drawStr(XPOS(17), YPOS(0), "I2C SCANNER");
+    oled.setFontDirection(0);
     for (x=0, y=0; x<16; x++) {       // row0: header
       oled.drawGlyph(XPOS(x+1), YPOS(y), TEXT(colunmFirst,x,y));
     }
