@@ -27,7 +27,6 @@
 #else
   #include <U8g2lib.h>
   #define FONT_TEXT  u8g2_font_5x7_mr
-  #define FONT_ICON  u8g2_font_m2icon_7_tf
   #define PAGE_BEGIN oled.firstPage(); do {
   #define PAGE_END   } while ( oled.nextPage() );
   #define XPOS(n)    (n+0)*7            // text/icon col --> x coord
@@ -48,9 +47,9 @@ void setup() {
   _Wire.begin();                     // init hardware I2C buss
   oled.begin();                     // init OLED, bitbanged I2C bus
   oled.clear();                     // clear screen
+  oled.setFont(FONT_TEXT);
   PAGE_BEGIN
-    oled.setFont(FONT_TEXT);
-    oled.setCursor(XPOS(0),YPOS(4));
+    oled.setCursor(XPOS(0),YPOS(2));
     oled.print(F("TINY I2C SCANNER"));
   PAGE_END
   delay(1000);
@@ -76,7 +75,6 @@ bool scann(uint8_t addr){
 #define HEX1(n)         ((n>9)?(n-10+'A'):(n+'0'))  // 0 .. 15 --> '0' .. 'F'
 #define TEXT(c,x,y)     c?HEX1(x+y):HEX1(x+2*y)     // use FONT_TEXT
 #define GLYPH(f,c,x,y)  f?'+':(x==0||y==0)?TEXT(c,x,y):'.'
-#define ICON(f)         f?0x46:0x45                 // use FONT_ICON
 #define COL(c,a)        (c)?(a%16):(a/8)            // low nibble  7b addr || high nibble 8b addr/2
 #define ROW(c,a)        (c)?(a/16):(a%8)            // high nibble 7b addr || low nibble  8b addr/2
 void loop() {
@@ -93,14 +91,12 @@ void loop() {
   bool found;
   PAGE_BEGIN
 #ifndef USE_U8X8
-    oled.setFont(FONT_TEXT);
     for (x=0, y=0; x<16; x++) {       // row0: header
       oled.drawGlyph(XPOS(x+1), YPOS(y), TEXT(colunmFirst,x,y));
     }
     for (x=0, y=0; y<8; y++) {        // col0: index
       oled.drawGlyph(XPOS(x), YPOS(y+1), TEXT(colunmFirst,x,y));
     }
-    oled.setFont(FONT_ICON);
 #endif
     for (addr=0; addr<128; addr++) {  // full address spase
       x = COL(colunmFirst, addr);
@@ -109,7 +105,11 @@ void loop() {
 #ifdef USE_U8X8
       oled.drawGlyph(x, y, GLYPH(found,colunmFirst,x,y));
 #else
-      oled.drawGlyph(XPOS(x+1), YPOS(y+1), ICON(found));
+      if (found) {
+        oled.drawBox  (XPOS(x+1), YPOS(y)+1, 6, 6);
+      } else {
+        oled.drawFrame(XPOS(x+1), YPOS(y)+1, 6, 6);
+      }
 #endif
     }
   PAGE_END
