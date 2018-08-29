@@ -68,6 +68,10 @@ bool scann(uint8_t addr){
   }
 }
 
+uint8_t found[16]; // 16 * 8 bits= 128 bits
+inline void found_set(uint8_t addr){ bitWrite(found[addr&0x0F], addr>>4, scann(addr)); }
+inline bool found_get(uint8_t addr){ return bitRead(found[addr&0x0F], addr>>4); }
+
 #define HEX1(n)         ((n>9)?(n-10+'A'):(n+'0'))  // 0 .. 15 --> '0' .. 'F'
 #define TEXT(c,x,y)     c?HEX1(x+y):HEX1(x+2*y)     // use FONT_TEXT
 #define GLYPH(f,c,x,y)  f?'+':(x==0||y==0)?TEXT(c,x,y):'.'
@@ -86,7 +90,9 @@ void loop() {
   const bool colunmFirst = true;
 #endif
   uint8_t addr, x, y;
-  bool found;
+  for (addr=0; addr<128; addr++) {  // full address spase
+    found_set(addr);
+  }
   PAGE_BEGIN
 #ifndef USE_U8X8
     oled.setFontDirection(1);
@@ -102,11 +108,10 @@ void loop() {
     for (addr=0; addr<128; addr++) {  // full address spase
       x = COL(colunmFirst, addr);
       y = ROW(colunmFirst, addr);
-      found = scann(addr);
 #ifdef USE_U8X8
-      oled.drawGlyph(x, y, GLYPH(found,colunmFirst,x,y));
+      oled.drawGlyph(x, y, GLYPH(found_get(addr),colunmFirst,x,y));
 #else
-      if (found) {
+      if (found_get(addr)) {
         oled.drawBox  (XPOS(x+1), YPOS(y)+1, 6, 6);
       } else {
         oled.drawFrame(XPOS(x+1), YPOS(y)+1, 6, 6);
