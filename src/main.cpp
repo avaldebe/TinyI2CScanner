@@ -36,11 +36,48 @@
   #endif
 #endif
 
+class Scanner {
+private: 
+  uint8_t found[16]; // 16 * 8 bits = 128 bits to cover the full address space
+  inline uint8_t lnb (uint8_t addr) { return addr&0x0F; }
+  inline uint8_t hnb (uint8_t addr) { return addr>>4; }
+
+public:
+  inline void set (uint8_t addr) {
+    bitWrite(found[lnb(addr)], hnb(addr), scann(addr));
+  }
+  inline bool get (uint8_t addr) {
+    return bitRead(found[lnb(addr)], hnb(addr));
+  }
+  inline void begin (void) { _Wire.begin(); }
+  static bool scann (uint8_t addr) {
+    const uint8_t AM2321 = 0x5c;
+    const uint8_t noError = 0x00;
+    switch (addr) {
+      case 0x00 ... 0x07: // first 8 addresses are reserved
+      case 0x78 ... 0xFF: // last  8 addresses are reserved
+        return false;
+      case AM2321:        // try 2 times for DHT12/AM2320/AM2321
+        _Wire.beginTransmission(addr);
+        if (_Wire.endTransmission(1)==noError) { return true; }
+        delay(5);
+      default:
+        _Wire.beginTransmission(addr);
+        return (_Wire.endTransmission(1)==noError);
+    }
+  }
+  inline void scann (void){
+    for (uint8_t addr=0; addr<128; addr++) {  // full address spase
+      set(addr);
+    }
+  }
+} scanner;
+
 void setup() {
 #ifdef TACT_PIN
   pinMode(TACT_PIN, INPUT);         // init TACT switch
 #endif
-  _Wire.begin();                    // init hardware I2C buss
+  scanner.begin();                  // init hardware I2C buss
   oled.begin();                     // init OLED, bitbanged I2C bus
   oled.clear();                     // clear screen
   oled.setFont(FONT_TEXT);
@@ -50,27 +87,6 @@ void setup() {
   delay(1000);
 #endif
 }
-
-bool scann(uint8_t addr){
-  const uint8_t AM2321 = 0x5c;
-  const uint8_t noError = 0x00;
-  switch (addr) {
-    case 0x00 ... 0x07: // first 8 addresses are reserved
-    case 0x78 ... 0xFF: // last  8 addresses are reserved
-      return false;
-    case AM2321:        // try 2 times for DHT12/AM2320/AM2321
-      _Wire.beginTransmission(addr);
-      if (_Wire.endTransmission(1)==noError) { return true; }
-      delay(5);
-    default:
-      _Wire.beginTransmission(addr);
-      return (_Wire.endTransmission(1)==noError);
-  }
-}
-
-uint8_t found[16]; // 16 * 8 bits= 128 bits
-inline void found_set(uint8_t addr){ bitWrite(found[addr&0x0F], addr>>4, scann(addr)); }
-inline bool found_get(uint8_t addr){ return bitRead(found[addr&0x0F], addr>>4); }
 
 #define HEX1(n)         ((n>9)?(n-10+'A'):(n+'0'))  // 0 .. 15 --> '0' .. 'F'
 #define TEXT(c,x,y)     c?HEX1(x+y):HEX1(x+2*y)     // use FONT_TEXT
@@ -89,10 +105,8 @@ void loop() {
 #else
   const bool colunmFirst = true;
 #endif
+  scanner.scann();  // scann I2C buss outside the page/display loop
   uint8_t addr, x, y;
-  for (addr=0; addr<128; addr++) {  // full address spase
-    found_set(addr);
-  }
   PAGE_BEGIN
 #ifndef USE_U8X8
     oled.setFontDirection(1);
@@ -109,9 +123,9 @@ void loop() {
       x = COL(colunmFirst, addr);
       y = ROW(colunmFirst, addr);
 #ifdef USE_U8X8
-      oled.drawGlyph(x, y, GLYPH(found_get(addr),colunmFirst,x,y));
+      oled.drawGlyph(x, y, GLYPH(scanner.get(addr),colunmFirst,x,y));
 #else
-      if (found_get(addr)) {
+      if (scanner.get(addr)) {
         oled.drawBox  (XPOS(x+1), YPOS(y)+1, 6, 6);
       } else {
         oled.drawFrame(XPOS(x+1), YPOS(y)+1, 6, 6);
