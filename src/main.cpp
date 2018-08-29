@@ -1,20 +1,9 @@
 #include <Arduino.h>
 
-// Scan haedware I2C bus
-#ifdef __AVR_ATtiny85__
-  #include <TinyWireM.h>
-  #define _Wire TinyWireM
-#else
-  #include <Wire.h>
-  #define _Wire Wire
-#endif
-
 // Arduino Monochrome Graphics Library
 #ifdef USE_U8X8
   #include <U8x8lib.h>
   #define FONT_TEXT  u8x8_font_chroma48medium8_u
-  #define PAGE_BEGIN
-  #define PAGE_END
   #if defined(SSD1306_SCL) && defined(SSD1306_SDA)
     U8X8_SSD1306_128X64_NONAME_SW_I2C   // software I2C
       oled(SSD1306_SCL, SSD1306_SDA, U8X8_PIN_NONE);
@@ -25,8 +14,6 @@
 #else
   #include <U8g2lib.h>
   #define FONT_TEXT  u8g2_font_5x7_mr
-  #define PAGE_BEGIN oled.firstPage(); do {
-  #define PAGE_END   } while ( oled.nextPage() );
   #if defined(SSD1306_SCL) && defined(SSD1306_SDA)
     U8G2_SSD1306_128X64_NONAME_1_SW_I2C // software I2C
       oled(U8G2_R0, SSD1306_SCL, SSD1306_SDA, U8X8_PIN_NONE);
@@ -34,6 +21,15 @@
     U8G2_SSD1306_128X64_NONAME_1_HW_I2C // hardware I2C
       oled(U8G2_R0, U8X8_PIN_NONE);
   #endif
+#endif
+
+// Scan haedware I2C bus
+#ifdef __AVR_ATtiny85__
+  #include <TinyWireM.h>
+  #define _Wire TinyWireM
+#else
+  #include <Wire.h>
+  #define _Wire Wire
 #endif
 
 class Scanner {
@@ -59,11 +55,11 @@ public:
         return false;
       case AM2321:        // try 2 times for DHT12/AM2320/AM2321
         _Wire.beginTransmission(addr);
-        if (_Wire.endTransmission(1)==noError) { return true; }
+        if (_Wire.endTransmission()==noError) { return true; }
         delay(5);
       default:
         _Wire.beginTransmission(addr);
-        return (_Wire.endTransmission(1)==noError);
+        return (_Wire.endTransmission()==noError);
     }
   }
   inline void scann (void){
@@ -105,10 +101,17 @@ void loop() {
 #else
   const bool colunmFirst = true;
 #endif
-  scanner.scann();  // scann I2C buss outside the page/display loop
+  scanner.scann();  // scann I2C bus outside the page/display loop
   uint8_t addr, x, y;
-  PAGE_BEGIN
-#ifndef USE_U8X8
+#ifdef USE_U8X8
+  for (addr=0; addr<128; addr++) {  // full address spase
+    x = COL(colunmFirst, addr);
+    y = ROW(colunmFirst, addr);
+    oled.drawGlyph(x, y, GLYPH(scanner.get(addr),colunmFirst,x,y));
+  }
+#else
+  oled.firstPage();
+  do {
     oled.setFontDirection(1);
     oled.drawStr(XPOS(17), YPOS(0), "I2C SCANNER");
     oled.setFontDirection(0);
@@ -118,19 +121,15 @@ void loop() {
     for (x=0, y=0; y<8; y++) {        // col0: index
       oled.drawGlyph(XPOS(x), YPOS(y+1), TEXT(colunmFirst,x,y));
     }
-#endif
     for (addr=0; addr<128; addr++) {  // full address spase
       x = COL(colunmFirst, addr);
       y = ROW(colunmFirst, addr);
-#ifdef USE_U8X8
-      oled.drawGlyph(x, y, GLYPH(scanner.get(addr),colunmFirst,x,y));
-#else
       if (scanner.get(addr)) {
         oled.drawBox  (XPOS(x+1), YPOS(y)+1, 6, 6);
       } else {
         oled.drawFrame(XPOS(x+1), YPOS(y)+1, 6, 6);
       }
-#endif
     }
-  PAGE_END
+  } while ( oled.nextPage() );
+#endif
 }
