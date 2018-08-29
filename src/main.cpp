@@ -34,37 +34,41 @@
 
 class Scanner {
 private: 
-  uint8_t found[16]; // 16 * 8 bits = 128 bits to cover the full address space
-  inline uint8_t lnb (uint8_t addr) { return addr&0x0F; }
-  inline uint8_t hnb (uint8_t addr) { return addr>>4; }
+  uint8_t found[16] = { 0 }; // 16 * 8 bits = 128 bits to cover the full address space
+  inline static uint8_t lnb (uint8_t addr) { return addr&0x0F; }
+  inline static uint8_t hnb (uint8_t addr) { return addr>>4; }
+
+protected:
+  inline static bool check (uint8_t addr) {
+    const uint8_t noError = 0x00;
+    _Wire.beginTransmission(addr);
+    return (_Wire.endTransmission()==noError);
+ }
 
 public:
+  inline void begin (void) { _Wire.begin(); }
   inline void set (uint8_t addr) {
     bitWrite(found[lnb(addr)], hnb(addr), scann(addr));
   }
   inline bool get (uint8_t addr) {
     return bitRead(found[lnb(addr)], hnb(addr));
   }
-  inline void begin (void) { _Wire.begin(); }
+  inline void scann (void){
+    for (uint8_t addr=0; addr<128; addr++) {  // full address spase
+      set(addr);
+    }
+  }
   static bool scann (uint8_t addr) {
     const uint8_t AM2321 = 0x5c;
-    const uint8_t noError = 0x00;
     switch (addr) {
       case 0x00 ... 0x07: // first 8 addresses are reserved
       case 0x78 ... 0xFF: // last  8 addresses are reserved
         return false;
       case AM2321:        // try 2 times for DHT12/AM2320/AM2321
-        _Wire.beginTransmission(addr);
-        if (_Wire.endTransmission()==noError) { return true; }
+        if (check(addr)) { return true; }
         delay(5);
       default:
-        _Wire.beginTransmission(addr);
-        return (_Wire.endTransmission()==noError);
-    }
-  }
-  inline void scann (void){
-    for (uint8_t addr=0; addr<128; addr++) {  // full address spase
-      set(addr);
+        return check(addr);
     }
   }
 } scanner;
