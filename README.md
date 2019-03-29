@@ -26,6 +26,8 @@ The `master` branch uses the [u8g2][] library. It uses nearly all the tiny85 mem
 On 8x8 character mode (`USE_U8X8` flag) the memory consumption is reduced
 (~40% data, ~60% program), but the address headers share the space with the
 first row/columns of the found/no-found indicators.
+The exact memory ussage mainly determined by the [u8g2][] library version.
+After U8g2@2.24.3 the program does not loger fits without the `USE_U8X8` flag.
 
 On all branches the I2C scanning function on the tiny85 is built around the [TinyWireM][] library.
 
