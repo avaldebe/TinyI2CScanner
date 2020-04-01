@@ -4,5 +4,6 @@
 .gcc-flags.json
 
 *.swp
-.vscode
+.vscode/*
+!.vscode/settings.json
 .pio
