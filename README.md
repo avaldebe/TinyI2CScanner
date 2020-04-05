@@ -1,4 +1,5 @@
 # TinyI2CScanner
+
 Micro I2C-Scanner with 0.96" OLED and ATtiny85
 
 This is a re-implementation of the elektor labs project [Micro I2C-Scanner with 0.96" Oled and ATtiny44][labs].
@@ -15,7 +16,7 @@ this implementation intends to address some issues I had the original tiny44 pro
 The `tinyFont` branch re-implements the exact functionality of the [elektor labs project][labs].
 It uses the background bitmap and some lines of code from original project, and therefore the original license is kept.
 
-The `tinusaur` branch contains a simpler implementation wich does not require a background bitmap,
+The `tinusaur` branch contains a simpler implementation which does not require a background bitmap,
 and relies on printed text (on a sticker) placed around of the OLED display.
 
 The `tinyFont` and `tinusaur` branches rely on the [tinusaur ssd1306xled][tinusaur]
@@ -26,8 +27,8 @@ The `master` branch uses the [u8g2][] library. It uses nearly all the tiny85 mem
 On 8x8 character mode (`USE_U8X8` flag) the memory consumption is reduced
 (~40% data, ~60% program), but the address headers share the space with the
 first row/columns of the found/no-found indicators.
-The exact memory ussage mainly determined by the [u8g2][] library version.
-After U8g2@2.24.3 the program does not loger fits without the `USE_U8X8` flag.
+The exact memory usage mainly determined by the [u8g2][] library version.
+After U8g2@2.24.3 the program does not logger fits without the `USE_U8X8` flag.
 
 On all branches the I2C scanning function on the tiny85 is built around the [TinyWireM][] library.
 
