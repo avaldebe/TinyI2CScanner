@@ -25,16 +25,16 @@
 #ifdef USE_U8X8
 #include <U8x8lib.h>
 #define FONT_TEXT u8x8_font_chroma48medium8_u
-#if defined(DISPLAY_SCL) && defined(DISPLAY_SDA)
-U8X8_SW_I2C oled(DISPLAY_SCL, DISPLAY_SDA, U8X8_PIN_NONE);
+#if defined(DISPLAY_SW_I2C)
+U8X8_SW_I2C oled(DISPLAY_SW_I2C, U8X8_PIN_NONE);
 #else
 U8X8_HW_I2C oled(U8X8_PIN_NONE);
 #endif
 #else
 #include <U8g2lib.h>
 #define FONT_TEXT u8g2_font_5x7_mr
-#if defined(DISPLAY_SCL) && defined(DISPLAY_SDA)
-U8G2_SW_I2C oled(U8G2_R0, DISPLAY_SCL, DISPLAY_SDA, U8X8_PIN_NONE);
+#if defined(DISPLAY_SW_I2C)
+U8G2_SW_I2C oled(U8G2_R0, DISPLAY_SW_I2C, U8X8_PIN_NONE);
 #else
 U8G2_HW_I2C oled(U8G2_R0, U8X8_PIN_NONE);
 #endif
