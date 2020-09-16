@@ -2,6 +2,10 @@
 
 Micro I2C-Scanner with 0.96" OLED and ATtiny85
 
+[![Build Status](https://travis-ci.com/avaldebe/TinyI2CScanner.svg?branch=master)](https://travis-ci.com/avaldebe/TinyI2CScanner)
+[![GitHub issues](https://img.shields.io/github/issues/avaldebe/TinyI2CScanner)](https://github.com/avaldebe/TinyI2CScanner/issues)
+[![GitHub license](https://img.shields.io/github/license/avaldebe/TinyI2CScanner)](https://github.com/avaldebe/TinyI2CScanner/blob/master/LICENSE)
+
 This is a re-implementation of the elektor labs project [Micro I2C-Scanner with 0.96" Oled and ATtiny44][labs].
 At first I tried to port the tiny44 project to a tiny85, but was unable to make it work on a digispark clone.
 The original implementation used some clever coding to fit the application on the tiny44.
