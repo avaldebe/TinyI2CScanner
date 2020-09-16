@@ -2,17 +2,20 @@
 
 language: python
 python:
-    - "2.7"
+  - "2.7"
 
-# Cache PlatformIO packages using Travis CI container-based infrastructure
-sudo: false
 cache:
-    directories:
-        - "~/.platformio"
+  directories:
+    - "~/.platformio"
+
+env:
+  - PLATFORMIO_CI_ENV=t85
+  - PLATFORMIO_CI_ENV=m168
+  - PLATFORMIO_CI_ENV=m328
 
 install:
-    - pip install -U platformio
-    - platformio update
+  - pip install -U platformio
+  - pio update
 
 script:
-    - platformio run -e t85 -e m168 -e m328
+  - pio run -e $PLATFORMIO_CI_ENV
